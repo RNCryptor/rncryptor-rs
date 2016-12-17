@@ -1,0 +1,7 @@
+[package]
+name = "rncryptor"
+version = "0.1.0"
+authors = ["Alfredo Di Napoli <alfredo.dinapoli@gmail.com>"]
+
+[dependencies]
+rust-crypto = "^0.2"
