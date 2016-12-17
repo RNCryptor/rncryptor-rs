@@ -4,4 +4,6 @@ version = "0.1.0"
 authors = ["Alfredo Di Napoli <alfredo.dinapoli@gmail.com>"]
 
 [dependencies]
-rust-crypto = "^0.2"
+rust-crypto = "~0.2"
+rand = "~0.3"
+arrayref = "~0.3.2"

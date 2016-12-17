@@ -1,10 +1,4 @@
 
-mod v3;
+#[macro_use] extern crate arrayref;
 
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
+pub mod v3;
