@@ -7,8 +7,9 @@ pub type Result<T> = StdResult<T, Error>;
 #[derive(Debug)]
 pub enum ErrorKind {
     HMACValidationFailed,
-    WrongInputSize(u8),
+    WrongInputSize(usize),
     IVGenerationFailed(std::io::Error),
+    SaltGenerationFailed(std::io::Error),
 }
 
 #[derive(Debug)]
