@@ -1,4 +1,6 @@
 
+extern crate crypto;
+
 use std::result::Result as StdResult;
 use std;
 
@@ -10,6 +12,7 @@ pub enum ErrorKind {
     WrongInputSize(usize),
     IVGenerationFailed(std::io::Error),
     SaltGenerationFailed(std::io::Error),
+    EncryptionFailed(crypto::symmetriccipher::SymmetricCipherError),
 }
 
 #[derive(Debug)]

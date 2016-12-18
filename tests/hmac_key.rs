@@ -1,23 +1,21 @@
 
 extern crate rncryptor;
-#[macro_use]
-extern crate arrayref;
+extern crate rustc_serialize;
 
 use rncryptor::v3::*;
+use rustc_serialize::hex::FromHex;
 use std::string::String;
 use std::fmt::Write;
 
 #[test]
 fn can_generate_hmac_key() {
-    let salt = Salt(*array_ref!("deadbeef".as_bytes(), 0, 8));
+    let salt = Salt(Vec::from("deadbeef"));
     let password = "secret";
-    let expected = "8bb1feac483aeb487805b2f0b565b6010493e05b148049a27fd9569dbc07b558";
+    let expected = "8bb1feac 483aeb48 7805b2f0 b565b601 \
+                    0493e05b 148049a2 7fd9569d bc07b558"
+        .from_hex()
+        .unwrap();
     let HMACKey(actual) = HMACKey::new(&salt, password.as_bytes());
 
-    let mut s = String::new();
-    for &byte in actual.iter() {
-        write!(&mut s, "{:x}", byte).unwrap();
-    }
-    // TODO: Fixme.
-    assert_eq!(expected, expected)
+    assert_eq!(actual, expected)
 }
