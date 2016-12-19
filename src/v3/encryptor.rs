@@ -85,7 +85,3 @@ impl Encryptor {
         Ok(message)
     }
 }
-
-pub fn decrypt(password: &Password, message: &Message) -> Result<Vec<u8>> {
-    Ok(Vec::from("umeboshi".as_bytes()))
-}
