@@ -6,7 +6,6 @@ authors = ["Alfredo Di Napoli <alfredo.dinapoli@gmail.com>"]
 [dependencies]
 rust-crypto = "~0.2"
 rand = "~0.3"
-arrayref = "~0.3.2"
 
 [dev-dependencies]
 rustc-serialize = "0.3"

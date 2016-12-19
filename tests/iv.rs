@@ -1,7 +1,7 @@
 
 extern crate rncryptor;
 
-use rncryptor::v3::*;
+use rncryptor::v3::types::*;
 
 #[test]
 fn can_generate_iv() {

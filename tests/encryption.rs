@@ -2,7 +2,8 @@ extern crate rustc_serialize;
 extern crate rncryptor;
 
 use rustc_serialize::hex::FromHex;
-use rncryptor::v3::{Encryptor, IV, Salt};
+use rncryptor::v3::types::{IV, Salt};
+use rncryptor::v3::encryptor::Encryptor;
 
 struct TestVector {
     password: &'static str,
@@ -19,7 +20,7 @@ fn test_vector(vector: TestVector) {
     let iv = IV(vector.iv.from_hex().unwrap());
     let plain_text = vector.plain_text.from_hex().unwrap();
     let ciphertext = vector.cipher_text.from_hex().unwrap();
-    let result = Encryptor::from(vector.password, encryption_salt, hmac_salt, iv)
+    let result = Encryptor::from_password(vector.password, encryption_salt, hmac_salt, iv)
         .and_then(|e| e.encrypt(&plain_text));
     match result {
         Err(e) => panic!(e),
