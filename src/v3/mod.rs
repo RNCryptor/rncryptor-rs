@@ -183,18 +183,23 @@ impl Encryptor {
         }
     }
 
-    pub fn from(password: &str, es: EncryptionSalt, hs: HMACSalt, iv: IV) -> Encryptor {
-        Encryptor {
+    pub fn from(password: &str, es: EncryptionSalt, hs: HMACSalt, iv: IV) -> Result<Encryptor> {
+
+        if password.len() <= 0 {
+            return Err(errors::Error::new(errors::ErrorKind::WrongInputSize(password.len()),
+                                        "Password length cannot be <= 0.".to_owned()))
+        }
+
+        Ok(Encryptor {
             encryption_key: EncryptionKey::new(&es, password.as_bytes()),
             encryption_salt: es,
             hmac_key: HMACKey::new(&hs, password.as_bytes()),
             hmac_salt: hs,
             iv: iv,
-        }
+        })
     }
 
     pub fn encrypt(&self, plain_text: &PlainText) -> Result<Message> {
-
         let mut header0:Vec<u8> = Vec::new();
         header0.push(3);
         header0.push(1);
@@ -226,7 +231,7 @@ pub fn encrypt(password: &str, plain_text: &PlainText) -> Result<Message> {
     let hmac_salt = try!(Salt::new());
     let iv = try!(IV::new());
 
-    let encryptor = Encryptor::from(password, encryption_salt, hmac_salt, iv);
+    let encryptor = try!(Encryptor::from(password, encryption_salt, hmac_salt, iv));
     encryptor.encrypt(plain_text)
 }
 
