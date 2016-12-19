@@ -25,6 +25,10 @@ impl <'a> EncryptionKey {
     pub fn new(encryption_salt: &Salt, password: &'a [u8]) -> EncryptionKey {
         EncryptionKey(new_key_with_salt(encryption_salt, password))
     }
+
+    pub fn from(raw_key: Vec<u8>) -> EncryptionKey {
+        EncryptionKey(raw_key)
+    }
 }
 
 #[derive (Debug)]
@@ -45,7 +49,7 @@ impl Salt {
 }
 
 #[derive (Debug, PartialEq, Eq)]
-pub struct HMACKey(pub Vec<u8>);
+pub struct HMACKey(Vec<u8>);
 
 fn new_key_with_salt<'a>(salt: &Salt, password: &'a [u8]) -> Vec<u8> {
         let Salt(ref salt) = *salt;
@@ -59,13 +63,17 @@ impl <'a> HMACKey {
     pub fn new(hmac_salt: &Salt, password: &'a [u8]) -> HMACKey {
         HMACKey(new_key_with_salt(hmac_salt, password))
     }
+
+    pub fn from(raw_key: Vec<u8>) -> HMACKey {
+        HMACKey(raw_key)
+    }
 }
 
 #[derive (Debug)]
 pub struct Header(pub Vec<u8>);
 
 #[derive (Debug, PartialEq, Eq)]
-pub struct IV(pub Vec<u8>);
+pub struct IV(Vec<u8>);
 
 impl Display for IV {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
@@ -89,6 +97,10 @@ impl IV {
             Err(e) => Err(Error::new(ErrorKind::IVGenerationFailed(e), "IV Generation failed.".to_owned())),
                 Ok(v) => Ok(IV(v))
         }
+    }
+
+    pub fn from(raw_key: Vec<u8>) -> IV {
+        IV(raw_key)
     }
 
     pub fn as_slice(&self) -> &[u8] {

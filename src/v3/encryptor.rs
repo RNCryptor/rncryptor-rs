@@ -57,7 +57,7 @@ impl Encryptor {
 
         let mut header: Vec<u8> = Vec::new();
         header.push(3);
-        header.push(1);
+        header.push(0);
         header.extend(iv.as_slice().iter());
 
         Ok(Encryptor {

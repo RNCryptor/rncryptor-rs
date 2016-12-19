@@ -17,7 +17,7 @@ struct TestVector {
 fn test_vector(vector: TestVector) {
     let encryption_salt = Salt(vector.encryption_salt.from_hex().unwrap());
     let hmac_salt = Salt(vector.hmac_salt.from_hex().unwrap());
-    let iv = IV(vector.iv.from_hex().unwrap());
+    let iv = IV::from(vector.iv.from_hex().unwrap());
     let plain_text = vector.plain_text.from_hex().unwrap();
     let ciphertext = vector.cipher_text.from_hex().unwrap();
     let result = Encryptor::from_password(vector.password, encryption_salt, hmac_salt, iv)
