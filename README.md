@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/adinapoli/rncryptor-rs.svg?branch=master)](https://travis-ci.org/adinapoli/rncryptor-rs)
+
 # Rust Implementation of the RNCryptor spec
 This library implements the specification for the [RNCryptor](https://github.com/RNCryptor)
 encrypted file format by Rob Napier.
