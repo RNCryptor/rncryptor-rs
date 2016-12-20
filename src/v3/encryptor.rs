@@ -1,23 +1,11 @@
 
 extern crate crypto;
-extern crate rand;
-
-use self::crypto::pbkdf2::pbkdf2;
-use std::iter::repeat;
-use self::crypto::hmac::Hmac;
-use self::crypto::aes;
-use self::crypto::mac::Mac;
-use self::crypto::buffer::{WriteBuffer, ReadBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
-use self::crypto::sha1::Sha1;
-use self::crypto::sha2::Sha256;
-use self::crypto::blockmodes;
-use self::rand::{Rng, OsRng};
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::result::Result as StdResult;
-use std;
 
 use v3::types::*;
 use v3::errors::{Result, Error, ErrorKind};
+use self::crypto::buffer::{WriteBuffer, ReadBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
+use self::crypto::aes;
+use self::crypto::blockmodes;
 
 pub struct Encryptor {
     encryption_key: EncryptionKey,
@@ -68,9 +56,44 @@ impl Encryptor {
         })
     }
 
+    pub fn cipher_text(&self, plain_text: &PlainText) -> Result<CipherText> {
+        let iv = self.iv.to_vec();
+        let key = self.encryption_key.to_vec();
+        let mut encryptor = aes::cbc_encryptor(
+            aes::KeySize::KeySize256,
+            key,
+            iv,
+            blockmodes::PkcsPadding);
+
+        // Usage taken from: https://github.com/DaGenix/rust-crypto/blob/master/examples/symmetriccipher.rs
+        let mut final_result = Vec::<u8>::new();
+        let mut buffer = [0; 4096];
+        let mut write_buffer = RefWriteBuffer::new(&mut buffer);
+        let mut read_buffer  = RefReadBuffer::new(plain_text);
+
+        loop {
+            let result = try!(encryptor.encrypt(&mut read_buffer, &mut write_buffer, true)
+                              .map_err(ErrorKind::EncryptionFailed));
+
+            // "write_buffer.take_read_buffer().take_remaining()" means:
+            // from the writable buffer, create a new readable buffer which
+            // contains all data that has been written, and then access all
+            // of that data as a slice.
+            final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
+
+            match result {
+                BufferResult::BufferUnderflow => break,
+                BufferResult::BufferOverflow => { }
+            }
+        }
+
+        Ok(CipherText(final_result))
+
+    }
+
     pub fn encrypt(&self, plain_text: &PlainText) -> Result<Message> {
 
-        let cipher_text = try!(CipherText::new(&plain_text, &self.iv, &self.encryption_key));
+        let cipher_text = try!(self.cipher_text(&plain_text));
         let CipherText(ref text) = cipher_text;
 
         let HMAC(hmac) = HMAC::new(&self.header, &cipher_text, &self.hmac_key);

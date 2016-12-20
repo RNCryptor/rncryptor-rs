@@ -5,12 +5,9 @@ extern crate crypto;
 use self::crypto::pbkdf2::pbkdf2;
 use std::iter::repeat;
 use self::crypto::hmac::Hmac;
-use self::crypto::aes;
 use self::crypto::mac::Mac;
-use self::crypto::buffer::{WriteBuffer, ReadBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
 use self::crypto::sha1::Sha1;
 use self::crypto::sha2::Sha256;
-use self::crypto::blockmodes;
 use self::rand::{Rng, OsRng};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::result::Result as StdResult;
@@ -21,13 +18,18 @@ use v3::errors::{Result, Error, ErrorKind};
 #[derive (Debug)]
 pub struct EncryptionKey(Vec<u8>);
 
-impl <'a> EncryptionKey {
+impl<'a> EncryptionKey {
     pub fn new(encryption_salt: &Salt, password: &'a [u8]) -> EncryptionKey {
         EncryptionKey(new_key_with_salt(encryption_salt, password))
     }
 
     pub fn from(raw_key: Vec<u8>) -> EncryptionKey {
         EncryptionKey(raw_key)
+    }
+
+    pub fn to_vec(&self) -> &Vec<u8> {
+        let EncryptionKey(ref v) = *self;
+        v
     }
 }
 
@@ -37,8 +39,11 @@ pub struct Salt(pub Vec<u8>);
 impl Salt {
     pub fn new() -> Result<Salt> {
         match random_data_of_len(8) {
-            Err(e) => Err(Error::new(ErrorKind::SaltGenerationFailed(e), "Salt Generation failed.".to_owned())),
-            Ok(v) => Ok(Salt(v))
+            Err(e) => {
+                Err(Error::new(ErrorKind::SaltGenerationFailed(e),
+                               "Salt Generation failed.".to_owned()))
+            }
+            Ok(v) => Ok(Salt(v)),
         }
     }
 
@@ -52,14 +57,14 @@ impl Salt {
 pub struct HMACKey(Vec<u8>);
 
 fn new_key_with_salt<'a>(salt: &Salt, password: &'a [u8]) -> Vec<u8> {
-        let Salt(ref salt) = *salt;
-        let mut mac = Hmac::new(Sha1::new(), password);
-        let mut result: Vec<u8> = repeat(0).take(32).collect();
-        pbkdf2(&mut mac, &salt[..], 10_000, &mut result[..]);
-        result
+    let Salt(ref salt) = *salt;
+    let mut mac = Hmac::new(Sha1::new(), password);
+    let mut result: Vec<u8> = repeat(0).take(32).collect();
+    pbkdf2(&mut mac, &salt[..], 10_000, &mut result[..]);
+    result
 }
 
-impl <'a> HMACKey {
+impl<'a> HMACKey {
     pub fn new(hmac_salt: &Salt, password: &'a [u8]) -> HMACKey {
         HMACKey(new_key_with_salt(hmac_salt, password))
     }
@@ -83,7 +88,7 @@ impl Display for IV {
     }
 }
 
-pub type Password  = [u8];
+pub type Password = [u8];
 pub type PlainText = [u8];
 pub type Message = Vec<u8>;
 
@@ -94,8 +99,11 @@ fn random_data_of_len(size: usize) -> StdResult<Vec<u8>, std::io::Error> {
 impl IV {
     pub fn new() -> Result<IV> {
         match random_data_of_len(16) {
-            Err(e) => Err(Error::new(ErrorKind::IVGenerationFailed(e), "IV Generation failed.".to_owned())),
-                Ok(v) => Ok(IV(v))
+            Err(e) => {
+                Err(Error::new(ErrorKind::IVGenerationFailed(e),
+                               "IV Generation failed.".to_owned()))
+            }
+            Ok(v) => Ok(IV(v)),
         }
     }
 
@@ -107,46 +115,14 @@ impl IV {
         let IV(ref s) = *self;
         s
     }
+
+    pub fn to_vec(&self) -> &Vec<u8> {
+        let IV(ref v) = *self;
+        v
+    }
 }
 
 pub struct CipherText(pub Vec<u8>);
-
-impl CipherText {
-    pub fn new(plain_text: &PlainText, iv: &IV, encryption_key: &EncryptionKey) -> Result<CipherText> {
-        let IV(ref iv_ref) = *iv;
-        let EncryptionKey(ref key) = *encryption_key;
-        let mut encryptor = aes::cbc_encryptor(
-            aes::KeySize::KeySize256,
-            key,
-            iv_ref,
-            blockmodes::PkcsPadding);
-
-        // Usage taken from: https://github.com/DaGenix/rust-crypto/blob/master/examples/symmetriccipher.rs
-        let mut final_result = Vec::<u8>::new();
-        let mut buffer = [0; 4096];
-        let mut write_buffer = RefWriteBuffer::new(&mut buffer);
-        let mut read_buffer  = RefReadBuffer::new(plain_text);
-
-        loop {
-            let result = try!(encryptor.encrypt(&mut read_buffer, &mut write_buffer, true)
-                              .map_err(ErrorKind::EncryptionFailed));
-
-            // "write_buffer.take_read_buffer().take_remaining()" means:
-            // from the writable buffer, create a new readable buffer which
-            // contains all data that has been written, and then access all
-            // of that data as a slice.
-            final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
-
-            match result {
-                BufferResult::BufferUnderflow => break,
-                BufferResult::BufferOverflow => { }
-            }
-        }
-
-        Ok(CipherText(final_result))
-
-    }
-}
 
 pub struct HMAC(pub Vec<u8>);
 

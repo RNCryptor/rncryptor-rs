@@ -4,8 +4,6 @@ extern crate rustc_serialize;
 
 use rncryptor::v3::types::*;
 use rustc_serialize::hex::FromHex;
-use std::string::String;
-use std::fmt::Write;
 
 #[test]
 fn can_generate_hmac_key() {

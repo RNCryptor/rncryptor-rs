@@ -9,10 +9,13 @@ pub type Result<T> = StdResult<T, Error>;
 #[derive(Debug)]
 pub enum ErrorKind {
     HMACValidationFailed,
+    HMACNotFound,
     WrongInputSize(usize),
+    NotEnoughInput(usize),
     IVGenerationFailed(std::io::Error),
     SaltGenerationFailed(std::io::Error),
     EncryptionFailed(crypto::symmetriccipher::SymmetricCipherError),
+    DecryptionFailed(crypto::symmetriccipher::SymmetricCipherError),
 }
 
 #[derive(Debug)]
