@@ -141,6 +141,13 @@ impl HMAC {
         // TODO: Avoid Vec use.
         HMAC(Vec::from(hmac.result().code()))
     }
+
+    pub fn is_equal_in_consistent_time_to(&self, hmac: &HMAC) -> bool {
+        let HMAC(ref this) = *self;
+        let HMAC(ref other) = *hmac;
+
+        this.iter().zip(other.iter()).fold(true, |acc, (x, y)| acc && (x == y))
+    }
 }
 
 pub type EncryptionSalt = Salt;

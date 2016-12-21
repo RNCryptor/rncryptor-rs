@@ -7,8 +7,15 @@ encrypted file format by Rob Napier.
 # Current Supported Versions
 * V3 - [Spec](https://github.com/RNCryptor/RNCryptor-Spec/blob/master/RNCryptor-Spec-v3.md)
 
+# What's there
+
+- [x] Password-based Encryption
+- [x] Key-based Encryption
+- [x] Decryption (with HMAC validation)
+- [x] Test vectors
+- [x] Quickcheck roundtrip properties
+
 # TODO
-- [ ] Decryption
 - [ ] Move away from `rust-crypto` if possible/needed.
 - [ ] Profiling & optimisations
 

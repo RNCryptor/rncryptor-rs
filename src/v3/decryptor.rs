@@ -95,9 +95,17 @@ impl Decryptor {
         let hmac_position = cipher_text_vec.len() - 32;
         let hmac0 = cipher_text_vec.drain(hmac_position..).collect();
 
-        let hmac = HMAC(hmac0);
-        let message = try!(self.plain_text(cipher_text_vec.as_slice()));
+        let encrypted = cipher_text_vec.as_slice();
 
-        Ok(message)
+        let message = try!(self.plain_text(encrypted));
+
+        let hmac = HMAC(hmac0);
+        // TODO: Remove the cloning.
+        let computed_hmac = HMAC::new(&Header(header), &CipherText(cipher_text_vec.clone()), &self.hmac_key);
+
+        match hmac.is_equal_in_consistent_time_to(&computed_hmac) {
+            true  => Ok(message),
+            false => Err(Error::new(ErrorKind::HMACValidationFailed, "HMAC mismatch.".to_owned())),
+        }
     }
 }
