@@ -16,9 +16,7 @@ before_script:
     export PATH=$HOME/.local/bin:$PATH
 script:
   - |
-    travis-cargo test -- --verbose --no-default-features &&
-    travis-cargo --skip nightly test -- --verbose --features "yaml unstable" &&
-    travis-cargo --only nightly test -- --verbose --features "yaml unstable nightly"
+    travis-cargo test -- --verbose --no-default-features
 addons:
   apt:
     packages:
