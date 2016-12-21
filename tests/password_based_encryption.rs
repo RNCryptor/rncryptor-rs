@@ -29,7 +29,6 @@ fn test_vector(vector: TestVector) {
 }
 
 #[test]
-#[ignore]
 fn all_fields_empty_or_zero() {
     test_vector(TestVector {
         password: "a",

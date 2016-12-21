@@ -56,14 +56,14 @@ impl Encryptor {
         })
     }
 
-    pub fn cipher_text(&self, plain_text: &PlainText) -> Result<CipherText> {
+    pub fn cipher_text<X: blockmodes::PaddingProcessor + Send + 'static>(&self, padding: X, plain_text: &PlainText) -> Result<CipherText> {
         let iv = self.iv.to_vec();
         let key = self.encryption_key.to_vec();
         let mut encryptor = aes::cbc_encryptor(
             aes::KeySize::KeySize256,
             key,
             iv,
-            blockmodes::PkcsPadding);
+            padding);
 
         // Usage taken from: https://github.com/DaGenix/rust-crypto/blob/master/examples/symmetriccipher.rs
         let mut final_result = Vec::<u8>::new();
@@ -93,10 +93,15 @@ impl Encryptor {
 
     pub fn encrypt(&self, plain_text: &PlainText) -> Result<Message> {
 
-        let cipher_text = try!(self.cipher_text(&plain_text));
+        // If the input is empty, pad it with Pkcs7 in full.
+        let cipher_text = match plain_text.is_empty() {
+            true  => try!(self.cipher_text(blockmodes::NoPadding, vec![16;16].as_slice())),
+            false => try!(self.cipher_text(blockmodes::PkcsPadding, &plain_text)),
+        };
+
         let CipherText(ref text) = cipher_text;
 
-        let HMAC(hmac) = HMAC::new(&self.header, &cipher_text, &self.hmac_key);
+        let HMAC(hmac) = try!(HMAC::new(&self.header, &cipher_text, &self.hmac_key));
 
         let mut message = Vec::new();
 

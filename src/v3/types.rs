@@ -1,13 +1,13 @@
 
 extern crate rand;
 extern crate crypto;
+extern crate rust_sodium;
 
+use self::rust_sodium::crypto::auth::hmacsha256::{Key, authenticate};
 use self::crypto::pbkdf2::pbkdf2;
 use std::iter::repeat;
 use self::crypto::hmac::Hmac;
-use self::crypto::mac::Mac;
 use self::crypto::sha1::Sha1;
-use self::crypto::sha2::Sha256;
 use self::rand::{Rng, OsRng};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::result::Result as StdResult;
@@ -122,24 +122,25 @@ impl IV {
     }
 }
 
+#[derive(Debug)]
 pub struct CipherText(pub Vec<u8>);
 
 pub struct HMAC(pub Vec<u8>);
 
 impl HMAC {
-    pub fn new(header: &Header, cipher_text: &CipherText, hmac_key: &HMACKey) -> HMAC {
+    pub fn new(header: &Header, cipher_text: &CipherText, hmac_key: &HMACKey) -> Result<HMAC> {
         let HMACKey(ref key) = *hmac_key;
         let Header(ref h) = *header;
         let CipherText(ref txt) = *cipher_text;
-        let mut hmac = Hmac::new(Sha256::new(), key);
 
         let mut input = Vec::new();
         input.extend(h);
         input.extend(txt.as_slice());
 
-        hmac.input(&input);
-        // TODO: Avoid Vec use.
-        HMAC(Vec::from(hmac.result().code()))
+        let sodium_key = try!(Key::from_slice(key).ok_or(ErrorKind::HMACGenerationFailed));
+        let tag = authenticate(&input, &sodium_key);
+
+        Ok(HMAC(Vec::from(tag.as_ref())))
     }
 
     pub fn is_equal_in_consistent_time_to(&self, hmac: &HMAC) -> bool {

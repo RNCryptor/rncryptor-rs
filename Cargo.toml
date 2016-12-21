@@ -5,6 +5,7 @@ authors = ["Alfredo Di Napoli <alfredo.dinapoli@gmail.com>"]
 
 [dependencies]
 rust-crypto = "~0.2"
+rust_sodium = "~0.1.2"
 rand = "~0.3"
 
 [dev-dependencies]
