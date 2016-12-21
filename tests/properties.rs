@@ -1,8 +1,18 @@
 extern crate quickcheck;
 extern crate rncryptor;
 
-use quickcheck::quickcheck;
+use quickcheck::QuickCheck;
 use rncryptor::v3;
+
+#[test]
+fn test_simple_roundtrip() {
+    let result = v3::encrypt("password", "secret".as_bytes())
+        .and_then(|encrypted| v3::decrypt("password", &encrypted));
+    match result {
+        Err(e) => panic!(format!("{:?}", e.kind)),
+        Ok(v) => assert_eq!(v, "secret".as_bytes().to_vec()),
+    }
+}
 
 #[test]
 fn test_roundtrip() {
@@ -14,5 +24,5 @@ fn test_roundtrip() {
             Ok(v) => v == message,
         }
     }
-    quickcheck(encrypt_decrypt_yields_the_same as fn(Vec<u8>) -> bool);
+    QuickCheck::new().tests(15).quickcheck(encrypt_decrypt_yields_the_same as fn(Vec<u8>) -> bool);
 }

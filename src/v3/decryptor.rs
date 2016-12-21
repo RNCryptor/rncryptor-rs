@@ -8,12 +8,12 @@ use self::crypto::blockmodes;
 use self::crypto::buffer::{WriteBuffer, ReadBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
 
 pub struct Decryptor {
-    version: u8,
-    options: u8,
+    pub version: u8,
+    pub options: u8,
     encryption_salt: EncryptionSalt,
     hmac_salt: HMACSalt,
     encryption_key: EncryptionKey,
-    hmac_key: HMACKey,
+    pub hmac_key: HMACKey,
     iv: IV,
 }
 
@@ -32,7 +32,6 @@ impl Decryptor {
         let iv = IV::from(message[18..34].to_vec());
         let encryption_key = EncryptionKey::new(&encryption_salt, password.as_bytes());
         let hmac_key = HMACKey::new(&hmac_salt, password.as_bytes());
-
 
         Ok(Decryptor {
             version: version,
@@ -91,26 +90,13 @@ impl Decryptor {
         header.extend(self.hmac_salt.as_slice().iter());
         header.extend(self.iv.as_slice().iter());
 
-        let ciphertext_iter = cipher_text[34..].iter();
-
-        // Try to find the HMAC at the end of the message.
-        // TODO: Rewrite this bit with take and collect.
-        let mut remaining = 32;
-        let mut hmac0 = Vec::new();
-        for v in ciphertext_iter.rev() {
-            if remaining == 0 {
-                break;
-            }
-            remaining -= 1;
-            hmac0.push(*v)
-        }
-        if remaining != 0 {
-            return Err(Error::new(ErrorKind::HMACNotFound,
-                                  "No HMAC found at the end.".to_owned()));
-        }
+        //TODO: Do not depend from drain.
+        let mut cipher_text_vec = Vec::from(&cipher_text[34..]);
+        let hmac_position = cipher_text_vec.len() - 32;
+        let hmac0 = cipher_text_vec.drain(hmac_position..).collect();
 
         let hmac = HMAC(hmac0);
-        let message = try!(self.plain_text(cipher_text));
+        let message = try!(self.plain_text(cipher_text_vec.as_slice()));
 
         Ok(message)
     }
