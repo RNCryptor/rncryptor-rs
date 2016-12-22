@@ -15,7 +15,7 @@ use std;
 
 use v3::errors::{Result, Error, ErrorKind};
 
-#[derive (Debug)]
+#[derive (Clone, Debug)]
 pub struct EncryptionKey(Vec<u8>);
 
 impl<'a> EncryptionKey {
@@ -33,7 +33,7 @@ impl<'a> EncryptionKey {
     }
 }
 
-#[derive (Debug)]
+#[derive (Clone, Debug)]
 pub struct Salt(pub Vec<u8>);
 
 impl Salt {
@@ -53,7 +53,7 @@ impl Salt {
     }
 }
 
-#[derive (Debug, PartialEq, Eq)]
+#[derive (Clone, Debug, PartialEq, Eq)]
 pub struct HMACKey(Vec<u8>);
 
 fn new_key_with_salt<'a>(salt: &Salt, password: &'a [u8]) -> Vec<u8> {
@@ -74,10 +74,10 @@ impl<'a> HMACKey {
     }
 }
 
-#[derive (Debug)]
+#[derive (Clone, Debug)]
 pub struct Header(pub Vec<u8>);
 
-#[derive (Debug, PartialEq, Eq)]
+#[derive (Clone, Debug, PartialEq, Eq)]
 pub struct IV(Vec<u8>);
 
 impl Display for IV {

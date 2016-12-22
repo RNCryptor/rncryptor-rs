@@ -7,6 +7,7 @@ use self::crypto::buffer::{WriteBuffer, ReadBuffer, RefReadBuffer, RefWriteBuffe
 use self::crypto::aes;
 use self::crypto::blockmodes;
 
+#[derive(Clone)]
 pub struct Encryptor {
     encryption_key: EncryptionKey,
     hmac_key: HMACKey,
