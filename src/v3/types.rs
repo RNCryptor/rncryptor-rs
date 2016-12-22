@@ -125,14 +125,14 @@ impl IV {
 #[derive(Debug)]
 pub struct CipherText(pub Vec<u8>);
 
+#[derive(Debug)]
 pub struct HMAC(pub Vec<u8>);
 
 impl HMAC {
-    pub fn new(header: &Header, cipher_text: &CipherText, hmac_key: &HMACKey) -> Result<HMAC> {
-        let HMACKey(ref key) = *hmac_key;
-        let Header(ref h) = *header;
-        let CipherText(ref txt) = *cipher_text;
-
+    pub fn new(&Header(ref h): &Header,
+               &CipherText(ref txt): &CipherText,
+               &HMACKey(ref key): &HMACKey)
+               -> Result<HMAC> {
         let mut input = Vec::new();
         input.extend(h);
         input.extend(txt.as_slice());
@@ -143,10 +143,8 @@ impl HMAC {
         Ok(HMAC(Vec::from(tag.as_ref())))
     }
 
-    pub fn is_equal_in_consistent_time_to(&self, hmac: &HMAC) -> bool {
+    pub fn is_equal_in_consistent_time_to(&self, &HMAC(ref other): &HMAC) -> bool {
         let HMAC(ref this) = *self;
-        let HMAC(ref other) = *hmac;
-
         this.iter().zip(other.iter()).fold(true, |acc, (x, y)| acc && (x == y))
     }
 }

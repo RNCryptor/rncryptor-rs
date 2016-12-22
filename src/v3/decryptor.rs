@@ -58,17 +58,11 @@ impl Decryptor {
         let mut final_result = Vec::<u8>::new();
         let mut buffer = [0; 4096];
         let mut write_buffer = RefWriteBuffer::new(&mut buffer);
-        //TODO: Fixme, doesn't strip away the HMAC.
         let mut read_buffer  = RefReadBuffer::new(cipher_text);
 
         loop {
             let result = try!(decryptor.decrypt(&mut read_buffer, &mut write_buffer, true)
                               .map_err(ErrorKind::DecryptionFailed));
-
-            // "write_buffer.take_read_buffer().take_remaining()" means:
-            // from the writable buffer, create a new readable buffer which
-            // contains all data that has been written, and then access all
-            // of that data as a slice.
             final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
 
             match result {
@@ -90,18 +84,16 @@ impl Decryptor {
         header.extend(self.hmac_salt.as_slice().iter());
         header.extend(self.iv.as_slice().iter());
 
-        //TODO: Do not depend from drain.
-        let mut cipher_text_vec = Vec::from(&cipher_text[34..]);
+        //TODO: Do not depend from drain, as this is O(n).
+        let encrypted = &cipher_text[34..];
+        let mut cipher_text_vec = Vec::from(encrypted);
         let hmac_position = cipher_text_vec.len() - 32;
         let hmac0 = cipher_text_vec.drain(hmac_position..).collect();
-
-        let encrypted = cipher_text_vec.as_slice();
 
         let message = try!(self.plain_text(encrypted));
 
         let hmac = HMAC(hmac0);
-        // TODO: Remove the cloning.
-        let computed_hmac = try!(HMAC::new(&Header(header), &CipherText(cipher_text_vec.clone()), &self.hmac_key));
+        let computed_hmac = try!(HMAC::new(&Header(header), &CipherText(cipher_text_vec), &self.hmac_key));
 
         match hmac.is_equal_in_consistent_time_to(&computed_hmac) {
             true  => Ok(message),
