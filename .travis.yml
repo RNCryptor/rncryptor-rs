@@ -26,3 +26,20 @@ addons:
     - cmake
     - gcc
     - binutils-dev
+after_success:
+  - |
+    wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+    tar xzf master.tar.gz &&
+    cd kcov-master &&
+    mkdir build &&
+    cd build &&
+    cmake .. &&
+    make &&
+    sudo make install &&
+    cd ../.. &&
+    rm -rf kcov-master &&
+    cargo clean &&
+    cargo test --no-run &&
+    for file in target/debug/*-*; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo --verify "target/cov/$(basename $file)" "$file"; done &&
+    kcov --coveralls-id=$TRAVIS_JOB_ID --merge target/cov target/cov/* &&
+    echo "Uploaded code coverage"
