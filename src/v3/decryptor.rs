@@ -85,15 +85,17 @@ impl Decryptor {
         header.extend(self.iv.as_slice().iter());
 
         //TODO: Do not depend from drain, as this is O(n).
-        let encrypted = &cipher_text[34..];
-        let mut cipher_text_vec = Vec::from(encrypted);
+        let mut cipher_text_vec = Vec::from(&cipher_text[34..]);
         let hmac_position = cipher_text_vec.len() - 32;
         let hmac0 = cipher_text_vec.drain(hmac_position..).collect();
+
+        let encrypted = cipher_text_vec.as_slice();
 
         let message = try!(self.plain_text(encrypted));
 
         let hmac = HMAC(hmac0);
-        let computed_hmac = try!(HMAC::new(&Header(header), &CipherText(cipher_text_vec), &self.hmac_key));
+        // TODO: Remove the cloning.
+        let computed_hmac = try!(HMAC::new(&Header(header), &CipherText(cipher_text_vec.clone()), &self.hmac_key));
 
         match hmac.is_equal_in_consistent_time_to(&computed_hmac) {
             true  => Ok(message),
