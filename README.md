@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/adinapoli/rncryptor-rs.svg?branch=master)](https://travis-ci.org/adinapoli/rncryptor-rs)
+[![Build Status](https://travis-ci.org/RNCryptor/rncryptor-rs.svg?branch=master)](https://travis-ci.org/RNCryptor/rncryptor-rs)
 [![Coverage Status](https://coveralls.io/repos/github/RNCryptor/rncryptor-rs/badge.svg?branch=master)](https://coveralls.io/github/RNCryptor/rncryptor-rs?branch=master)
 
 # Rust Implementation of the RNCryptor spec
