@@ -15,11 +15,13 @@ use std;
 
 use v3::errors::{Result, Error, ErrorKind};
 
-#[derive (Debug)]
+/// An `EncryptionKey`, which can be constructed from a `EncryptionSalt` and a password.
+#[derive (Clone, Debug)]
 pub struct EncryptionKey(Vec<u8>);
 
 impl<'a> EncryptionKey {
-    pub fn new(encryption_salt: &Salt, password: &'a [u8]) -> EncryptionKey {
+    /// Creates a new `EncryptionKey` out of an `EncryptionSalt` and a password.
+    pub fn new(encryption_salt: &EncryptionSalt, password: &'a [u8]) -> EncryptionKey {
         EncryptionKey(new_key_with_salt(encryption_salt, password))
     }
 
@@ -33,10 +35,12 @@ impl<'a> EncryptionKey {
     }
 }
 
-#[derive (Debug)]
+/// A `Salt`, which can be completely random or user-constructed.
+#[derive (Clone, Debug)]
 pub struct Salt(pub Vec<u8>);
 
 impl Salt {
+    /// Creates a new, completely random `Salt` of 8 bytes.
     pub fn new() -> Result<Salt> {
         match random_data_of_len(8) {
             Err(e) => {
@@ -47,13 +51,15 @@ impl Salt {
         }
     }
 
+    /// Turns a `Salt` into a `[u8]` slice.
     pub fn as_slice(&self) -> &[u8] {
         let Salt(ref s) = *self;
         s
     }
 }
 
-#[derive (Debug, PartialEq, Eq)]
+/// A `HMACKey`, which can be constructed from an `HMACSalt` and a password.
+#[derive (Clone, Debug, PartialEq, Eq)]
 pub struct HMACKey(Vec<u8>);
 
 fn new_key_with_salt<'a>(salt: &Salt, password: &'a [u8]) -> Vec<u8> {
@@ -74,10 +80,12 @@ impl<'a> HMACKey {
     }
 }
 
-#[derive (Debug)]
+/// A RNCryptor `Header` built during the encryption/decryption process.
+#[derive (Clone, Debug)]
 pub struct Header(pub Vec<u8>);
 
-#[derive (Debug, PartialEq, Eq)]
+/// An `IV` (Initialization Vector) which can be completely random or user constructed.
+#[derive (Clone, Debug, PartialEq, Eq)]
 pub struct IV(Vec<u8>);
 
 impl Display for IV {
@@ -88,8 +96,12 @@ impl Display for IV {
     }
 }
 
+/// A password.
 pub type Password = [u8];
+/// A plain text, which is something not encrypted.
 pub type PlainText = [u8];
+// TODO: Can we make CipherText & Message to be isomorphic?
+/// An encrypted message, the result of the encryption process.
 pub type Message = Vec<u8>;
 
 fn random_data_of_len(size: usize) -> StdResult<Vec<u8>, std::io::Error> {
@@ -97,6 +109,7 @@ fn random_data_of_len(size: usize) -> StdResult<Vec<u8>, std::io::Error> {
 }
 
 impl IV {
+    /// Creates a new, completely random `IV` (Initialization Vector) of 16 bytes.
     pub fn new() -> Result<IV> {
         match random_data_of_len(16) {
             Err(e) => {
@@ -107,35 +120,38 @@ impl IV {
         }
     }
 
+    /// Creates a new `IV` (Initialization Vector) from a `Vec<u8>`. It's your responsibility
+    /// to ensure the `IV` is random and of 16 bytes.
     pub fn from(raw_key: Vec<u8>) -> IV {
         IV(raw_key)
     }
 
+    /// Turns the `IV` into a `[u8]` slice.
     pub fn as_slice(&self) -> &[u8] {
         let IV(ref s) = *self;
         s
     }
 
+    /// Turns the `IV` into a `Vec<u8>` vector.
     pub fn to_vec(&self) -> &Vec<u8> {
         let IV(ref v) = *self;
         v
     }
 }
 
+/// An `CipherText`, essentially a wrapper around a `Vec<u8>`.
 #[derive(Debug)]
 pub struct CipherText(pub Vec<u8>);
 
+/// An `HMAC`, which can be constructed out of an `Header`, some bytes and an `HMACKey`.
+#[derive(Debug)]
 pub struct HMAC(pub Vec<u8>);
 
 impl HMAC {
-    pub fn new(header: &Header, cipher_text: &CipherText, hmac_key: &HMACKey) -> Result<HMAC> {
-        let HMACKey(ref key) = *hmac_key;
-        let Header(ref h) = *header;
-        let CipherText(ref txt) = *cipher_text;
-
+    pub fn new(&Header(ref h): &Header, txt: &[u8], &HMACKey(ref key): &HMACKey) -> Result<HMAC> {
         let mut input = Vec::new();
         input.extend(h);
-        input.extend(txt.as_slice());
+        input.extend(txt);
 
         let sodium_key = try!(Key::from_slice(key).ok_or(ErrorKind::HMACGenerationFailed));
         let tag = authenticate(&input, &sodium_key);
@@ -143,13 +159,13 @@ impl HMAC {
         Ok(HMAC(Vec::from(tag.as_ref())))
     }
 
-    pub fn is_equal_in_consistent_time_to(&self, hmac: &HMAC) -> bool {
+    pub fn is_equal_in_consistent_time_to(&self, &HMAC(ref other): &HMAC) -> bool {
         let HMAC(ref this) = *self;
-        let HMAC(ref other) = *hmac;
-
         this.iter().zip(other.iter()).fold(true, |acc, (x, y)| acc && (x == y))
     }
 }
 
+/// Simply  a type synonym for a `Salt`, to make the API more descriptive.
 pub type EncryptionSalt = Salt;
+/// Simply  a type synonym for a `Salt`, to make the API more descriptive.
 pub type HMACSalt = Salt;

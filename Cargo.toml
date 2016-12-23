@@ -2,6 +2,11 @@
 name = "rncryptor"
 version = "0.1.0"
 authors = ["Alfredo Di Napoli <alfredo.dinapoli@gmail.com>"]
+repository = "https://github.com/RNCryptor/rncryptor-rs.git"
+documentation = "https://docs.rs/rncryptor/"
+homepage = "http://rncryptor.github.io/"
+readme = "README.md"
+license = "MIT"
 
 [dependencies]
 rust-crypto = "~0.2"

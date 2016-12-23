@@ -1,4 +1,3 @@
-
 extern crate crypto;
 
 use v3::types::*;
@@ -7,6 +6,7 @@ use self::crypto::buffer::{WriteBuffer, ReadBuffer, RefReadBuffer, RefWriteBuffe
 use self::crypto::aes;
 use self::crypto::blockmodes;
 
+#[derive(Clone)]
 pub struct Encryptor {
     encryption_key: EncryptionKey,
     hmac_key: HMACKey,
@@ -74,11 +74,6 @@ impl Encryptor {
         loop {
             let result = try!(encryptor.encrypt(&mut read_buffer, &mut write_buffer, true)
                               .map_err(ErrorKind::EncryptionFailed));
-
-            // "write_buffer.take_read_buffer().take_remaining()" means:
-            // from the writable buffer, create a new readable buffer which
-            // contains all data that has been written, and then access all
-            // of that data as a slice.
             final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
 
             match result {
@@ -93,7 +88,7 @@ impl Encryptor {
 
     pub fn encrypt(&self, plain_text: &PlainText) -> Result<Message> {
 
-        // If the input is empty, pad it with Pkcs7 in full.
+        // If the input is empty, use the Pkcs7 padding as input.
         let cipher_text = match plain_text.is_empty() {
             true  => try!(self.cipher_text(blockmodes::NoPadding, vec![16;16].as_slice())),
             false => try!(self.cipher_text(blockmodes::PkcsPadding, &plain_text)),
@@ -101,7 +96,7 @@ impl Encryptor {
 
         let CipherText(ref text) = cipher_text;
 
-        let HMAC(hmac) = try!(HMAC::new(&self.header, &cipher_text, &self.hmac_key));
+        let HMAC(hmac) = try!(HMAC::new(&self.header, text.as_slice(), &self.hmac_key));
 
         let mut message = Vec::new();
 
