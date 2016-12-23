@@ -7,6 +7,7 @@ use self::crypto::aes;
 use self::crypto::blockmodes;
 use self::crypto::buffer::{WriteBuffer, ReadBuffer, RefReadBuffer, RefWriteBuffer, BufferResult};
 
+/// A "Decryptor", which is nothing more than a data structure to keep around the RNCryptor context
 pub struct Decryptor {
     pub version: u8,
     pub options: u8,
@@ -18,6 +19,7 @@ pub struct Decryptor {
 }
 
 impl Decryptor {
+    /// Builds a "Decryptor" out of a password and a message (to decrypt).
     pub fn from(password: &str, message: &[u8]) -> Result<Decryptor> {
         let msg_len = message.len();
         if msg_len < 66 {
@@ -75,6 +77,7 @@ impl Decryptor {
 
     }
 
+    /// Decrypts a `cipher_text`, returning a `Message` or an `Error`.
     pub fn decrypt(&self, cipher_text: &[u8]) -> Result<Message> {
 
         let mut header: Vec<u8> = Vec::new();

@@ -1,4 +1,3 @@
-
 extern crate crypto;
 
 use v3::types::*;
