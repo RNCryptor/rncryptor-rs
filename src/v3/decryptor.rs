@@ -94,8 +94,7 @@ impl Decryptor {
         let message = try!(self.plain_text(encrypted));
 
         let hmac = HMAC(hmac0);
-        // TODO: Remove the cloning.
-        let computed_hmac = try!(HMAC::new(&Header(header), &CipherText(cipher_text_vec.clone()), &self.hmac_key));
+        let computed_hmac = try!(HMAC::new(&Header(header), cipher_text_vec.as_slice(), &self.hmac_key));
 
         match hmac.is_equal_in_consistent_time_to(&computed_hmac) {
             true  => Ok(message),

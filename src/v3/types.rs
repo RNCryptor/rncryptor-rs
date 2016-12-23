@@ -129,13 +129,10 @@ pub struct CipherText(pub Vec<u8>);
 pub struct HMAC(pub Vec<u8>);
 
 impl HMAC {
-    pub fn new(&Header(ref h): &Header,
-               &CipherText(ref txt): &CipherText,
-               &HMACKey(ref key): &HMACKey)
-               -> Result<HMAC> {
+    pub fn new(&Header(ref h): &Header, txt: &[u8], &HMACKey(ref key): &HMACKey) -> Result<HMAC> {
         let mut input = Vec::new();
         input.extend(h);
-        input.extend(txt.as_slice());
+        input.extend(txt);
 
         let sodium_key = try!(Key::from_slice(key).ok_or(ErrorKind::HMACGenerationFailed));
         let tag = authenticate(&input, &sodium_key);

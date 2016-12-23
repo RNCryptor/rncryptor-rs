@@ -97,7 +97,7 @@ impl Encryptor {
 
         let CipherText(ref text) = cipher_text;
 
-        let HMAC(hmac) = try!(HMAC::new(&self.header, &cipher_text, &self.hmac_key));
+        let HMAC(hmac) = try!(HMAC::new(&self.header, text.as_slice(), &self.hmac_key));
 
         let mut message = Vec::new();
 
