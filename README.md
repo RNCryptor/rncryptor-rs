@@ -1,6 +1,7 @@
 ## rncryptor
 
 [![Build Status](https://travis-ci.org/RNCryptor/rncryptor-rs.svg?branch=master)](https://travis-ci.org/RNCryptor/rncryptor-rs)
+[![Build status](https://ci.appveyor.com/api/projects/status/j835khgynu8j1llw?svg=true)](https://ci.appveyor.com/project/adinapoli/rncryptor-rs)
 [![Coverage Status](https://coveralls.io/repos/github/RNCryptor/rncryptor-rs/badge.svg?branch=master)](https://coveralls.io/github/RNCryptor/rncryptor-rs?branch=master)
 
 ## Rust Implementation of the RNCryptor spec
