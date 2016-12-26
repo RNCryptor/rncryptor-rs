@@ -11,7 +11,7 @@ license = "MIT"
 
 [dependencies]
 rust-crypto = "~0.2"
-rust_sodium = "~0.1.2"
+fastpbkdf2 = "~0.1.0"
 rand = "~0.3"
 
 [dev-dependencies]
